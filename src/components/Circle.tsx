@@ -18,13 +18,15 @@ type Props = {
   iconSize?: number;
   contentContainerStyle?: StyleProp<ViewStyle>;
   icons: Icon[];
+  onAction: (index: number) => void;
 };
 
 export const Circle: React.FC<Props> = ({
   size = 320,
   iconSize = 32,
   contentContainerStyle,
-  icons
+  icons,
+  onAction
 }) => {
   const [rotation, setRotation] = useState(0);
   const [angleValue, setAngleValue] = useState(0);
@@ -77,10 +79,12 @@ export const Circle: React.FC<Props> = ({
 
         Animated.spring(animatedAngle, {
           delay: 8,
+          bounciness: 10,
           toValue: animateAngle
-        }).start(() => {
-          setRotation(animateAngle);
-        });
+        }).start(() => setRotation(animateAngle));
+
+        const index = Math.floor(animateAngle / 360 * icons.length);
+        onAction(index >= icons.length ? 0 : index);
         break;
       }
     }
