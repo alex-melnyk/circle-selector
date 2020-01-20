@@ -17,7 +17,13 @@ type Item = {
 type Props = {
   size?: number;
   iconSize?: number;
+  dragSpeed?: number;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  circleStyle?: StyleProp<ViewStyle>,
+  blurredView?: {
+    tint: 'light' | 'default' | 'dark',
+    intensity: number;
+  },
   items: Item[];
   onAction: (index: number) => void;
 };
@@ -25,7 +31,10 @@ type Props = {
 export const Circle: React.FC<Props> = ({
   size = 300,
   iconSize = 28,
+  dragSpeed = 0.5,
   contentContainerStyle,
+  circleStyle,
+  blurredView,
   items,
   onAction
 }) => {
@@ -49,7 +58,7 @@ export const Circle: React.FC<Props> = ({
   }, [animatedAngle, changeState]);
 
   const handleGestureEvent = useCallback((event: PanGestureHandlerGestureEvent) => {
-    const angle = rotation + event.nativeEvent.translationX;
+    const angle = rotation + event.nativeEvent.translationX * dragSpeed;
 
     const combined = angle > 360
       ? angle - 360
@@ -65,7 +74,7 @@ export const Circle: React.FC<Props> = ({
 
     switch (event.nativeEvent.state) {
       case State.END: {
-        const angle = rotation + event.nativeEvent.translationX;
+        const angle = rotation + event.nativeEvent.translationX * dragSpeed;
 
         const combined = angle >= 360
           ? angle - 360
@@ -117,7 +126,7 @@ export const Circle: React.FC<Props> = ({
         <FontAwesome
           name={item.name}
           size={iconSize}
-          color="white"
+          color="#333333"
         />
       </View>
     );
@@ -136,30 +145,43 @@ export const Circle: React.FC<Props> = ({
         onGestureEvent={handleGestureEvent}
         onHandlerStateChange={handleHandlerStateChange}
       >
-        <View style={contentContainerStyle}>
+        <View style={[contentContainerStyle, { alignItems: 'center', justifyContent: 'center' }]}>
           <Animated.View
-            style={{
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-              overflow: 'hidden',
-              // backgroundColor: background
-            }}
+            style={[
+              {
+                width: size,
+                height: size,
+                borderRadius: size / 2,
+                overflow: 'hidden',
+              },
+              circleStyle
+            ]}
           >
-            <BlurView
-              tint="dark"
-              intensity={95}
-              style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-              }}
-            >
-              {iconsList}
-            </BlurView>
+            {blurredView ? (
+              <BlurView
+                style={Styles.itemsContainer}
+                {...blurredView}
+              >
+                {iconsList}
+              </BlurView>
+            ) : (
+              <View style={Styles.itemsContainer}>
+                {iconsList}
+              </View>
+            )}
           </Animated.View>
         </View>
       </PanGestureHandler>
     </>
   );
+};
+
+const Styles: {
+  [key: string]: StyleProp<ViewStyle>
+} = {
+  itemsContainer: {
+    position: "absolute",
+    width: '100%',
+    height: '100%',
+  }
 };

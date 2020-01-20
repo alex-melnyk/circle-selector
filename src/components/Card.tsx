@@ -11,11 +11,9 @@ export const Card: React.FC<Props> = ({ icon, color }) => {
   const animated = new Animated.Value(0);
   const [prevColor, setPrevColor] = useState('#FFFFFF');
 
-  useEffect(() => {
-    return () => {
-      setPrevColor(color);
-      animated.setValue(0);
-    };
+  useEffect(() => () => {
+    setPrevColor(color);
+    animated.setValue(0);
   }, [color]);
 
   useEffect(() => {
@@ -24,14 +22,14 @@ export const Card: React.FC<Props> = ({ icon, color }) => {
     }).start();
   }, [icon, prevColor]);
 
+  const backgroundColor = animated.interpolate({
+    inputRange: [0, 1],
+    outputRange: [prevColor, color]
+  });
+
   const height = animated.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 110]
-  });
-
-  const bgColor = animated.interpolate({
-    inputRange: [0, 1],
-    outputRange: [prevColor, color]
   });
 
   return (
@@ -43,7 +41,7 @@ export const Card: React.FC<Props> = ({ icon, color }) => {
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: 10,
-        backgroundColor: bgColor,
+        backgroundColor,
         height,
       }}
     >

@@ -39,7 +39,7 @@ export default function App() {
   const cardsList = useMemo(() => {
     const currentIcon = icons[currentIndex];
 
-    return [...new Array(5)].map((val, idx) => (
+    return [...new Array(6)].map((val, idx) => (
       <Card
         key={`card_${idx}`}
         icon={currentIcon.name}
@@ -65,6 +65,10 @@ export default function App() {
           position: 'absolute',
           bottom: -190,
         }}
+        blurredView={{
+          tint: 'light',
+          intensity: 100
+        }}
         items={icons}
         onAction={handleAction}
       />
@@ -75,6 +79,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E0E0E0',
   },
 });
