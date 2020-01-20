@@ -7,8 +7,9 @@ import {
   State
 } from 'react-native-gesture-handler';
 import { FontAwesome } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 
-type Icon = {
+type Item = {
   name: string;
   color: string;
 };
@@ -17,15 +18,15 @@ type Props = {
   size?: number;
   iconSize?: number;
   contentContainerStyle?: StyleProp<ViewStyle>;
-  icons: Icon[];
+  items: Item[];
   onAction: (index: number) => void;
 };
 
 export const Circle: React.FC<Props> = ({
-  size = 320,
-  iconSize = 32,
+  size = 300,
+  iconSize = 28,
   contentContainerStyle,
-  icons,
+  items,
   onAction
 }) => {
   const [rotation, setRotation] = useState(0);
@@ -35,8 +36,9 @@ export const Circle: React.FC<Props> = ({
   const animatedAngle = useMemo(() => new Animated.Value(0), []);
 
   const radius = useMemo(() => size / 2, [size]);
-  const iconOffset = useMemo(() => radius - iconSize, [radius, iconSize]);
-  const iconsDegree = useMemo(() => 360 / icons.length, [icons]);
+  const iconPosition = useMemo(() => radius - iconSize, [radius, iconSize]);
+  const iconOffset = useMemo(() => radius - iconSize / 2, [radius, iconSize]);
+  const iconsDegree = useMemo(() => 360 / items.length, [items]);
 
   useEffect(() => {
     animatedAngle.addListener(({ value }) => {
@@ -65,9 +67,9 @@ export const Circle: React.FC<Props> = ({
       case State.END: {
         const angle = rotation + event.nativeEvent.translationX;
 
-        const combined = angle > 360
+        const combined = angle >= 360
           ? angle - 360
-          : angle < 0
+          : angle <= 0
             ? 360 + angle
             : angle;
 
@@ -83,17 +85,20 @@ export const Circle: React.FC<Props> = ({
           toValue: animateAngle
         }).start(() => setRotation(animateAngle));
 
-        const index = Math.floor(animateAngle / 360 * icons.length);
-        onAction(index >= icons.length ? 0 : index);
+        const index = Math.floor(animateAngle / 360 * items.length);
+
+        const itemIndex = items.length - index;
+
+        onAction(itemIndex >= items.length ? 0 : itemIndex);
         break;
       }
     }
   }, [animatedAngle, rotation, iconsDegree]);
 
-  const iconsList = useMemo(() => icons.map((icon, idx) => {
+  const iconsList = useMemo(() => items.map((item, idx) => {
     const angle = idx * iconsDegree - 90 + angleValue;
-    const x = iconOffset * Math.cos(Math.PI * 2 * angle / 360) + (radius - iconSize / 2);
-    const y = iconOffset * Math.sin(Math.PI * 2 * angle / 360) + (radius - iconSize / 2);
+    const x = iconPosition * Math.cos(Math.PI * 2 * angle / 360) + iconOffset;
+    const y = iconPosition * Math.sin(Math.PI * 2 * angle / 360) + iconOffset;
 
     return (
       <View
@@ -110,18 +115,20 @@ export const Circle: React.FC<Props> = ({
         }}
       >
         <FontAwesome
-          name={icon.name}
+          name={item.name}
           size={iconSize}
-          color="black"
+          color="white"
         />
       </View>
     );
-  }), [icons, iconOffset, angleValue]);
+  }), [items, iconPosition, angleValue]);
 
-  const background = animatedAngle.interpolate({
-    inputRange: [...[...new Array(icons.length)].map((val, idx) => 360 / icons.length * idx), 360],
-    outputRange: [...icons.map((val, idx) => icons[idx].color), icons[0].color]
-  });
+  // const background = animatedAngle.interpolate({
+  //   inputRange: [...[...new Array(items.length)]
+  //     .map((val, idx) => 360 / items.length * idx), 360],
+  //   outputRange: [...items
+  //     .map((val, idx) => items[idx].color), items[0].color]
+  // });
 
   return (
     <>
@@ -136,10 +143,12 @@ export const Circle: React.FC<Props> = ({
               height: size,
               borderRadius: size / 2,
               overflow: 'hidden',
-              backgroundColor: background
+              // backgroundColor: background
             }}
           >
-            <View
+            <BlurView
+              tint="dark"
+              intensity={95}
               style={{
                 position: 'absolute',
                 width: '100%',
@@ -147,7 +156,7 @@ export const Circle: React.FC<Props> = ({
               }}
             >
               {iconsList}
-            </View>
+            </BlurView>
           </Animated.View>
         </View>
       </PanGestureHandler>
